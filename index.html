@@ -1,0 +1,52 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="webfont.js"></script>
+    <script src="snap.svg-min.js"></script>
+    <script src="underscore-min.js"></script>
+    <script src="sequence-diagram-min.js"></script>
+  </head>
+  <body>
+    <div id="diagram">
+      <div class="placeholder">Loading ...</div>
+    </div>
+    <script>
+      var content = `
+Title: fuzzing sequence diagram
+Browser -> GW: HTTP POST /fuzzing
+GW -> AUTH: check auth
+AUTH -->GW: auth failed
+AUTH ->GW: auth success
+GW -> TM: create fuzzing task
+
+TM ->> MQ: create job
+TM ->> MongoDB: save job
+Note right of TM: TM checks if need to crawl the contract
+MQ ->> Crawler : trigger crawler to download contract
+
+Crawler ->> MongoDB: save crawled contracts
+Crawler ->> MQ: notify crawling results
+Crawler --> MQ: crawling failed
+MQ --> TM: crawling failed
+MQ --> GW: crawling failed
+
+
+MQ ->> Worker : trigger fuzzing
+Worker ->> MongoDB: save fuzzing results
+Worker ->> MQ : notify fuzzing results
+Worker --> MQ: fuzzing failed
+MQ --> TM: fuzzing failed
+MQ --> GW: fuzzing failed
+
+
+
+GW ->> Browser: Notify user of the fuzzing result
+`;
+      let diagram = Diagram.parse(content);
+      diagram.drawSVG("diagram", {theme: 'simple'});
+      let d = document.getElementsByClassName('placeholder')[0];
+      d.textContent = '';
+    </script>
+  </body>
+</html>
